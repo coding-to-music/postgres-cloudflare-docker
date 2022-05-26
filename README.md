@@ -8,6 +8,7 @@ Query Postgres from Workers using a database connector. Retrieve data in your Cl
 
 Set up a tunnel locally (CLI setup)
 
+```java
 1. Download and install cloudflared
    .deb install
    ​.rpm install
@@ -31,7 +32,7 @@ Set up a tunnel locally (CLI setup)
     6.1. Set secrets
     6.2. Test the Worker
 7. Cleanup
-
+```
 
 # 🚀 Javascript full-stack 🚀
 
