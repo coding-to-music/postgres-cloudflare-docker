@@ -431,8 +431,8 @@ To get started:
 2.  After running the `git clone` command, `cd` into the new project.
 
 ```sh
-$ git clone https://github.com/cloudflare/worker-template-postgres/
-$ cd worker-template-postgres
+git clone https://github.com/cloudflare/worker-template-postgres/
+cd worker-template-postgres
 ```
 
 ## Cloudflare Tunnel authentication
@@ -441,7 +441,10 @@ To create and manage secure Cloudflare Tunnels, you first need to authenticate `
 Skip this step if you already have authenticated `cloudflared` locally.
 
 ```sh
-$ docker run -v ~/.cloudflared:/etc/cloudflared cloudflare/cloudflared:2021.11.0 login
+docker run -v ~/.cloudflared:/etc/cloudflared cloudflare/cloudflared:2021.11.0 login
+
+# should be without a specific old tag, use latest
+docker run -v ~/.cloudflared:/etc/cloudflared cloudflare/cloudflared login
 ```
 
 Running this command will:
@@ -468,11 +471,13 @@ You can find a prepared `docker-compose` file that does not require any changes 
 Run the following commands to start all services. Replace `postgres-tunnel.example.com` with a hostname on your Cloudflare zone to route traffic through this tunnel.
 
 ```sh
-$ cd scripts/postgres
-$ export TUNNEL_HOSTNAME=postgres-tunnel.example.com
-$ docker compose up
+cd scripts/postgres
+export TUNNEL_HOSTNAME=postgres-tunnel.example.com
 
-# Alternative: Run `docker compose up -D` to start docker-compose detached
+export TUNNEL_HOSTNAME=blog
+docker-compose up
+
+# Alternative: Run `docker-compose up -D` to start docker-compose detached
 ```
 
 `docker-compose` will spin up and configure all the services for you, including the creation of the Tunnel's DNS record.
@@ -483,8 +488,8 @@ The DNS record will point to the Cloudflare Tunnel, which keeps a secure connect
 Once Postgres is up and running, seed the database with a schema and a dataset. For this tutorial, you will use the Pagila schema and dataset. Use `docker exec` to execute a command inside the running Postgres container and import [Pagila](https://github.com/devrimgunduz/pagila) schema and dataset.
 
 ```sh
-$ curl https://raw.githubusercontent.com/devrimgunduz/pagila/master/pagila-schema.sql | docker exec -i postgres_postgresql_1 psql -U postgres -d postgres
-$ curl https://raw.githubusercontent.com/devrimgunduz/pagila/master/pagila-data.sql | docker exec -i postgres_postgresql_1 psql -U postgres -d postgres
+curl https://raw.githubusercontent.com/devrimgunduz/pagila/master/pagila-schema.sql | docker exec -i postgres_postgresql_1 psql -U postgres -d postgres
+curl https://raw.githubusercontent.com/devrimgunduz/pagila/master/pagila-data.sql | docker exec -i postgres_postgresql_1 psql -U postgres -d postgres
 ```
 
 The above commands will download the SQL schema and dataset files from Pagila's GitHub repository and execute them in your local Postgres database instance.
@@ -582,7 +587,7 @@ account_id = ""
 Publish your function:
 
 ```sh
-$ wrangler publish
+wrangler publish
 ✨  Built successfully, built project size is 10 KiB.
 ✨  Successfully published your script to
  https://workers-postgres-template.example.workers.dev
@@ -595,8 +600,8 @@ https://developers.cloudflare.com/cloudflare-one/identity/service-auth/service-t
 Create and save [a Client ID and a Client Secret](https://developers.cloudflare.com/cloudflare-one/identity/service-auth/service-tokens) to Worker secrets in case your Tunnel is protected by Cloudflare Access.
 
 ```sh
-$ wrangler secret put CF_CLIENT_ID
-$ wrangler secret put CF_CLIENT_SECRET
+wrangler secret put CF_CLIENT_ID
+wrangler secret put CF_CLIENT_SECRET
 ```
 
 ### Test the Worker
@@ -604,10 +609,10 @@ $ wrangler secret put CF_CLIENT_SECRET
 Request some of the Pagila tables by adding the `?pagila-table` query parameter with a table name to the URL of the Worker.
 
 ```sh
-$ curl https://example.workers.dev/?pagila-table=actor
-$ curl https://example.workers.dev/?pagila-table=address
-$ curl https://example.workers.dev/?pagila-table=country
-$ curl https://example.workers.dev/?pagila-table=language
+curl https://example.workers.dev/?pagila-table=actor
+curl https://example.workers.dev/?pagila-table=address
+curl https://example.workers.dev/?pagila-table=country
+curl https://example.workers.dev/?pagila-table=language
 ```
 
 ## Cleanup
@@ -615,7 +620,7 @@ $ curl https://example.workers.dev/?pagila-table=language
 Run the following command to stop and remove the Docker containers and networks:
 
 ```sh
-$ docker compose down
+docker compose down
 
 # Stop and remove containers, networks
 ```
