@@ -18,6 +18,21 @@ Set up a tunnel locally (CLI setup)
 6. Run the tunnel
 7. Check the tunnel
 
+1. Overview
+2. Basic project scaffolding
+3. Cloudflare Tunnel authentication
+4. Start and prepare Postgres database
+    4.1. Start the Postgres server
+    4.2. Import example dataset
+5. Edit Worker and query Pagila dataset
+    5.1. Database connection settings
+    5.2. Query Pagila dataset
+6. Worker deployment
+    6.1. Set secrets
+    6.2. Test the Worker
+7. Cleanup
+
+
 # 🚀 Javascript full-stack 🚀
 
 https://github.com/coding-to-music/postgres-cloudflare-docker
