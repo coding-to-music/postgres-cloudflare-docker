@@ -70,6 +70,186 @@ git remote add origin git@github.com:coding-to-music/postgres-cloudflare-docker.
 git push -u origin main
 ```
 
+## Naming and storing a configuration file
+
+cloudflared will automatically look for a config.yaml or config.yml file in the default cloudflared directory .
+
+You can give your configuration file a custom name and store it in any directory. However, when running tunnel, make sure to add the --config flag and specify the new path.
+
+```java
+cloudflared tunnel --config /path/your-config-file.yaml run tunnel-name
+```
+
+# How to setup a Cloudflare Tunnel
+
+https://dev.to/realchaika/how-to-setup-a-cloudflare-tunnel-on-linux-40d9
+
+## Installing Cloudflared
+Cloudflare Tunnels use Cloudflared, a tunneling daemon to proxy the traffic from Cloudflare, and also to provide a CLI interface to make and manage tunnels.
+
+### .deb install (Ubuntu, Linux Mint, Debian, etc)
+```java
+wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb
+```
+### ​ .rpm install (Centos, Fedora, Rhel, OpenSusu, etc)
+```java
+wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-x86_64.rpm && sudo rpm -i cloudflared-linux-x86_64.rpm 
+```
+
+## Login to Cloudflared
+
+```java
+cloudflared tunnel login
+```
+
+This command should give you the link to sign into Cloudflare, and select a zone (website) to create tunnels on.
+
+When done, it will download an account certificate (cert.pem file in the default cloudflared directory). This cert will be used to authorize future API Requests to create and manage tunnels. Once your tunnel is up and running, it will use its own credentials file, and you can safely delete this unless you want to keep managing/creating/deleting tunnels from this machine.
+
+## Create a tunnel
+
+```java
+cloudflared tunnel create <name>
+```
+
+This command will create a named tunnel based on the name entered. It will generate a new tunnel, this includes generating a UUID for the tunnel, a tunnel credentials file in the default cloudflared directory, and a subdomain of .cfargotunnel.com that you can use to route requests to.
+
+In this example, I'll be naming my tunnel "frontpage".
+
+## Create your tunnel configuration file
+
+Throughout the past two steps, after logging in and creating the account cert, and making a tunnel, generating the tunnel cert, cloudflared has listed the path to your .cloudflared directory, which is most likely based off your home directory.
+
+```java
+Something like "~/.cloudflared" or "/home/{username}/.cloudflared"
+```
+
+Navigate to that folder now. You should see cert.pem (your account cert) and a .json file named off the UUID of your tunnel.
+
+Create a new file in the same directory, config.yml, and open it using your preferred text editor.
+
+```java
+url: http://localhost:80
+tunnel: <Tunnel-UUID>
+credentials-file: /home/{username}/.cloudflared/<Tunnel-UUID>.json
+```
+
+The URL line corresponds to the internal service you wish to expose. It's not necessary to use https://, the connection between Cloudflare Tunnel and Cloudflare's datacenter is already encrypted. This is just the tunnel connecting locally to the web server.
+
+The Tunnel UUID is a 36 character value that corresponds with your named tunnel. It was displayed when you made the tunnel. You can also find it by going to your .cloudflared directory and looking for the newly created json credentials file for the tunnel you made. It should be named {Tunnel-UUID}.json.
+
+## Route traffic to your tunnel
+
+You just create a CNAME Record to route traffic to your tunnel. You can do so easily using the cloudflared cli
+
+```java
+cloudflared tunnel route dns <Tunnel UUID or Name> <Hostname>
+```
+
+For example, my tunnel is named frontpage and I wanted it to be accessible via example.chaika.dev. So 
+
+I did
+
+```java
+cloudflared tunnel route dns frontpage example.chaika.dev
+```
+
+## Run your tunnel
+
+Finally, you can test out your tunnel.
+
+```java
+cloudflared tunnel run <UUID or Name>
+```
+
+You can also specify a specific configuration file to run
+```java
+cloudflared tunnel --config path/config.yaml run
+```
+
+Once your tunnel is live, try accessing it via the hostname you routed it to. It may take a few seconds for the tunnel to be fully live/accessible. If something is wrong, the tunnel running in the CLI should tell you more information about errors.
+
+## Run your tunnel as a service
+
+Running your tunnel manually will work, but isn't the best. It won't automatically start if your machine reboots, have to ensure its open/running, etc.
+
+Luckily, cloudflared supports installing itself as a service very easily.
+
+```java
+sudo cloudflared service install
+```
+
+You may need to manually specify config location. In my case, I did have to specify it.
+
+For example,
+
+```java
+sudo cloudflared --config /home/{username}/.cloudflared/config.yml  service install 
+```
+
+Note that you specify the config argument before the 'service install' command parameters.
+
+The configuration will be copied over to /etc/cloudflared
+
+I would recommend copying over the tunnel credentials file ({Tunnel-UUID}.json) over to there as well.
+
+Then, just launch the service and set it to start on boot
+
+```java
+sudo systemctl enable cloudflared
+sudo systemctl start cloudflared
+```
+
+Ensure your tunnel started/is running fine:
+
+```java
+sudo systemctl status cloudflared
+```
+
+Test out your tunnel by visting the hostname you routed it to.
+
+## Possible helpful GitHub issue
+
+https://github.com/cloudflare/cloudflared/issues/504
+
+References this article: https://ilayk.com/2021/03/25/cloudflared
+
+```java
+The Docker docs should also cover the config.yml more.
+
+For those of you who stumble accross this issue in the future, here is my Docker cli command for creating the container. Note that you will have to tunnel login and tunnel create tunnel_name_here before running the tunnel.
+
+Command:
+
+docker run -d \
+  --name cloudflared \
+  -v ~/.config/cloudflared:/home/nonroot/.cloudflared/ \
+  cloudflare/cloudflared:2021.11.0-amd64 \
+  tunnel run ubuntu
+
+config.yml
+
+tunnel: tunnel_id_goes_here # output to terminal when running tunnel login
+credentials-file: /home/nonroot/.cloudflared/credential_file_here.json
+ingress:
+   - hostname: mywebsite.com # your domain goes here
+     service: http://localhost:8080 # service you want to expose
+   - service: http://localhost:404 # backup service that will return 404 error from Cloudflare
+```
+
+Another example of a config.yml
+
+```java
+tunnel: Tunnel ID
+credentials-file: /home/leon/.cloudflared/TunnelID.json
+ingress:
+        - hostname: leonnunes.dev
+          service: http://localhost:8080
+        #Catch-all rule, which just responds with 404 if traffic doesn't match any of
+          #   # the earlier rules
+        - service: http_status:404
+```
+
 ## Cloudflared documentation
 
 ```java
