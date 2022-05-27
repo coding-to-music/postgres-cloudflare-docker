@@ -472,13 +472,6 @@ mv /root/cloudflared/cloudflared /usr/bin/cloudflared
 </div>
 </details>
 
----
-
-pcx-content-type: reference
-title: Useful terms
-weight: 6
-
----
 
 # Useful terms
 
@@ -736,16 +729,6 @@ Tunnels created in this method do not currently display in the **Traffic** tab o
 
 Cloudflare Tunnel deletes DNS records after 24-48 hours of a Tunnel being unregistered. Cloudflare Tunnel does not delete TLS certificates on your behalf once the Tunnel is shut down. If you want to clean up a Tunnel you’ve shut down, you can delete DNS records [in the DNS editor](https://dash.cloudflare.com/?zone=dns) and revoke TLS certificates in the Origin Certificates section of the [SSL/TLS tab of the Cloudflare dashboard](https://dash.cloudflare.com?to=/:account/:zone/ssl-tls/origin).
 
----
-
-updated: 2021-11-15
-difficulty: Beginner
-content_type: 📝 Tutorial
-pcx-content-type: tutorial
-title: Query Postgres from Workers using a database connector
-
----
-
 # Query Postgres from Workers using a database connector
 
 <TutorialsBeforeYouStart />
@@ -840,10 +823,8 @@ The above commands will download the SQL schema and dataset files from Pagila's 
 In `src/index.ts`, replace `https://dev.example.com` with your Cloudflare Tunnel hostname, ensuring that it is prefixed with the `https://` protocol:
 
 ```js
----
-filename: src/index.ts
-highlight: [4]
----
+// src/index.ts
+
 const client = new Client({
   user: 'postgres',
   database: 'postgres',
