@@ -15,10 +15,12 @@ services:
     depends_on:
       - postgresql
   cloudflared:
-    image: cloudflare/cloudflared:2022.5.1
+    image: cloudflare/cloudflared
+    environment:
+      - TUNNEL_HOSTNAME=${TUNNEL_HOSTNAME}
     volumes:
       - '~/.cloudflared:/etc/cloudflared'
-    command: tunnel run -f --url tcp://pgbouncer:6432 553f30e5-d691-4235-ad24-2a276c241caa
+    command: tunnel --url tcp://pgbouncer:6432 --name dev -f
     depends_on:
       - pgbouncer
 volumes:
