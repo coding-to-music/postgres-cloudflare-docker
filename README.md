@@ -208,6 +208,61 @@ sudo systemctl status cloudflared
 
 Test out your tunnel by visting the hostname you routed it to.
 
+
+## Example: cloudflared run in docker
+
+https://gist.github.com/joejordanbrown/b63f82a298da208a5e4780c2200af8fb
+
+# Example: cloudflared run in docker
+
+- https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup
+- https://hub.docker.com/r/cloudflare/cloudflared
+- https://github.com/cloudflare/cloudflared/
+
+---
+
+1. Authenticate with Cloudflare -> cloudflared tunnel login
+```shell
+sudo docker run -it --rm --name=cloudflared -v /root/.cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:2022.2.0 tunnel login
+```
+
+2. Create tunnel -> cloudflared tunnel create `<tunnel-name>`
+```shell
+sudo docker run -it --rm --name=cloudflared -v /root/.cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:2022.2.0 tunnel create example-tunnel
+```
+
+3. Add DNS route internal.example.com to tunnel -> cloudflared tunnel route dns `<tunnel-name>` `<route-hostname>`
+```shell
+sudo docker run -it --rm --name=cloudflared -v /root/.cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:2022.2.0 tunnel route dns example-tunnel internal.example.com
+```
+
+4. Add DNS route app1.example.com to tunnel -> cloudflared tunnel route dns `<tunnel-name>` `<route-hostname>`
+```shell
+sudo docker run -it --rm --name=cloudflared -v /root/.cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:2022.2.0 tunnel route dns example-tunnel app1.example.com
+```
+
+5. Run tunnel in detached docker container -> cloudflared tunnel run
+```shell
+sudo docker run -it --rm --name=cloudflared --network="host" -d -v /root/.cloudflared:/home/nonroot/.cloudflared cloudflare/cloudflared:2022.2.0 tunnel run
+```
+
+/root/.cloudflared/config.yml
+```yaml
+tunnel: *******************
+credentials-file: /root/.cloudflared/***-*-*-*-****.json
+
+ingress:
+  - hostname: internal.example.com
+    service: https://127.0.0.1:8443
+    originRequest:
+      noTLSVerify: true
+
+  - hostname: app1.example.com
+    service: http://192.168.1.10:8990
+
+  - service: http_status:404
+```
+
 ## Possible helpful GitHub issue
 
 https://github.com/cloudflare/cloudflared/issues/504
